@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -17,10 +15,10 @@ public class OAuth
 {
     /// <summary>
     /// Create OAuth JWTToken.
-    /// [Documentation](https://tasks.frends.com/tasks/frends-tasks/Frends.OAuth.CreateJWTToken
+    /// [Documentation](https://tasks.frends.com/tasks/frends-tasks/Frends.OAuth.CreateJWTToken)
     /// </summary>
     /// <param name="input">Input parameters</param>
-    /// <returns>List { string Token }</returns>
+    /// <returns>Object { string Token }</returns>
     public static TokenResult CreateJWTToken(Input input)
     {
         SigningCredentials signingCredentials;
