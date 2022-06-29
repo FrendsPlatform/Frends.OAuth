@@ -1,0 +1,7 @@
+{
+  "Tasks": [
+    {
+      "TaskMethod": "Frends.OAuth.CreateJWTToken.OAuth.CreateJWTToken"
+    }
+  ]
+}
