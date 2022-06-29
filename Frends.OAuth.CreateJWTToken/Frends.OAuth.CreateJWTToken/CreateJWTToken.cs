@@ -21,7 +21,7 @@ public class OAuth
     /// </summary>
     /// <param name="input">Input parameters</param>
     /// <returns>List { string Token }</returns>
-    public static Result CreateJWTToken([PropertyTab] Input input)
+    public static TokenResult CreateJWTToken(Input input)
     {
         SigningCredentials signingCredentials;
         bool isSymmetric = input.SigningAlgorithm.ToString().StartsWith("HS");
@@ -44,12 +44,11 @@ public class OAuth
                 CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false }
             };
         }
-        return new Result { Results = CreateToken(signingCredentials, input, isSymmetric) };
+        return new TokenResult { Token = CreateToken(signingCredentials, input, isSymmetric) };
     }
 
-    private static List<TokenResult> CreateToken(SigningCredentials signingCredentials, Input input, bool usesSymmetricAlgorithm)
+    private static string CreateToken(SigningCredentials signingCredentials, Input input, bool usesSymmetricAlgorithm)
     {
-        var result = new List<TokenResult>();
         var handler = new JwtSecurityTokenHandler();
         var claims = new ClaimsIdentity();
         JwtSecurityToken secToken;
@@ -93,8 +92,7 @@ public class OAuth
                 });
             }
 
-            result.Add(new TokenResult(handler.WriteToken(secToken)));
-            return result;
+            return handler.WriteToken(secToken).ToString();
         }
         catch (Exception ex)
         {

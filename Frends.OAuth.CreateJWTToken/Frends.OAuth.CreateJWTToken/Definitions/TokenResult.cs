@@ -7,10 +7,5 @@ public class TokenResult
     /// <summary>
     /// Token.
     /// </summary>
-    public string Token { get; private set; }
-
-    internal TokenResult(string Status)
-    {
-        Token = Status;
-    }
+    public string Token { get; internal set; }
 }

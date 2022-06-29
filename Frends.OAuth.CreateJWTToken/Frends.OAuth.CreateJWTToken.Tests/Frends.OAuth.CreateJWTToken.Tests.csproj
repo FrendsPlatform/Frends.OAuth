@@ -22,4 +22,8 @@
     <ProjectReference Include="..\Frends.OAuth.CreateJWTToken\Frends.OAuth.CreateJWTToken.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Keys\" />
+  </ItemGroup>
+
 </Project>

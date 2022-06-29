@@ -12,7 +12,7 @@
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
 	<Description>Frends task for OAuth JWTToken creation.</Description>
 	<PackageProjectUrl>https://frends.com/</PackageProjectUrl>
-	<RepositoryUrl>https://github.com/FrendsPlatform/Frends.CrossplatformServiceBus</RepositoryUrl>
+	<RepositoryUrl>https://github.com/FrendsPlatform/Frends.OAuth</RepositoryUrl>
   </PropertyGroup>
 	
   <ItemGroup>
@@ -22,10 +22,6 @@
   </ItemGroup>
 	
   <ItemGroup>
-    <PackageReference Include="coverlet.collector" Version="3.1.2">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="6.20.0" />
   </ItemGroup>
 
