@@ -74,9 +74,7 @@ public class OAuth
                 JsonWebKeySet = JsonConvert.DeserializeObject<JsonWebKeySet>(input.StaticJwksConfiguration)
             };
             foreach (var key in configuration.JsonWebKeySet.GetSigningKeys())
-            {
                 configuration.SigningKeys.Add(key);
-            }
 
             return configuration;
         }
