@@ -1,21 +1,62 @@
-﻿using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
+﻿using System;
 
 namespace Frends.OAuth.ParseToken.Definitions;
+
 /// <summary>
-/// Return token.
+/// Parse result.
 /// </summary>
 public class ParseResult
 {
     /// <summary>
-    /// A claim-based identity parsed from the token.
+    /// Unique identifier of the security token.
     /// </summary>
-    /// <example>nickname:, name:, picture:, updated_at:, iss:, aud:, iat:, exp:, at_hash:, nonce:</example>
-    public ClaimsPrincipal ClaimsPrincipal { get; set; }
+    /// <example>9b3250d8d5ee432</example>
+    public string Id { get; private set; }
 
     /// <summary>
-    /// A validated security token.
+    /// 'issuer' claim { iss, 'value' }.
     /// </summary>
-    /// <example>{{"typ":"JWT","alg":"RS256","kid":"MTUyRjI1ASDTg4NTI3OTQzRTczRTU3NUQ3NzgyODhBRDZBNTU3Mw"}.{"nickname":"test","name":"test@hiq.fi","picture":"foo.png","updated_at":"2018-10-18T10:10:19.443Z","iss":"https://foo.eu.auth0.com/","sub":"auth0|5bc8404a8f65fb7f2934cd53","aud":"fIVLouKSAihXfYP3tdO9D3dwd6ZNS9Be","iat":1539857423,"exp":1539893423,"at_hash":"YsBWM1fCez-FIRvi4wpz1A","nonce":"3.BfZpNwp3Ju4wzkjXX1gkPvrpru4102"}}</example>
-    public SecurityToken Token { get; set; }
+    /// <example>https://frends.com/"</example>
+    public string Issuer { get; private set; }
+
+    /// <summary>
+    /// 'audience' claim { aud, 'value' }.
+    /// </summary>
+    /// <example>"fIVLouKYRihXfYN6tdO9D3dwd6ZNS9Be"</example>
+    public string Audiences { get; private set; }
+
+    /// <summary>
+    /// SecurityKeys for this instance.
+    /// </summary>
+    /// <example>gHVXsCt97WM6oGYVm0U0NUaGh7M5MF2CvysUNpShwcU21BAnkKU4Xg</example>
+    public string SecurityKeyId { get; private set; }
+
+    /// <summary>
+    /// SecurityKeys for this instance.
+    /// </summary>
+    /// <example>gHVXsCt97WM6oGYVm0U0NUaGh7M5MF2CvysUNpShwcU21BAnkKU4Xg</example>
+    public string SigningKeyId { get; private set; }
+
+    /// <summary>
+    /// Gets the 'value' of the 'notbefore' claim { nbf, 'value' } converted to a DateTime assuming 'value' is seconds since UnixEpoch (UTC 1970-01-01T0:0:0Z).
+    /// </summary>
+    /// <example>0001-01-01 0:00:00</example>
+    public DateTime ValidFrom { get; private set; }
+
+    /// <summary>
+    /// Gets the 'value' of the 'expiration' claim { exp, 'value' } converted to a DateTime assuming 'value' is seconds since UnixEpoch (UTC 1970-01-01T0:0:0Z).
+    /// </summary>
+    /// <example>2018-10-18 20:00:00</example>
+    public DateTime ValidTo { get; private set; }
+
+    internal ParseResult(string id, string issuer, string audiences, string securityKeyId, string signingKeyId, DateTime validFrom, DateTime validTo)
+    {
+        Id = id;
+        Issuer = issuer;
+        Audiences = audiences;
+        SecurityKeyId = securityKeyId;
+        SigningKeyId = signingKeyId;
+        ValidFrom = validFrom;
+        ValidTo = validTo;
+    }
 }
