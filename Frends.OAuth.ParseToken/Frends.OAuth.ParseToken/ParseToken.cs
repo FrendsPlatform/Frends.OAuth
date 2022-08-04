@@ -30,7 +30,6 @@ public class OAuth
     /// <returns>Object { string Id, string Issuer, string Audiences, string SecurityKeyId, string SigningKeyId, DateTime ValidFrom, DateTime ValidTo }</returns>
     public static async Task<ParseResult> ParseToken([PropertyTab] Input input, [PropertyTab] Options options, CancellationToken cancellationToken)
     {
-        var tokenResult = new List<TokenResult>();
         var config = await GetConfiguration(input, cancellationToken).ConfigureAwait(false);
         var decryptionKeys = new List<SecurityKey>();
 
@@ -59,18 +58,15 @@ public class OAuth
         foreach (var claim in claims.Claims)
             if (claim.Type == "aud") audiences = claim.Value;
 
-        tokenResult.Add(new TokenResult
-        {
-            Id = validatedToken.Id ?? null,
-            Issuer = validatedToken.Issuer ?? null,
-            Audiences = audiences,
-            SecurityKeyId = (validatedToken.SecurityKey != null && validatedToken.SecurityKey.KeyId != null) ? validatedToken.SecurityKey.KeyId : null,
-            SigningKeyId = (validatedToken.SigningKey != null && validatedToken.SigningKey.KeyId != null) ? validatedToken.SigningKey.KeyId : null,
-            ValidFrom = validatedToken.ValidFrom,
-            ValidTo = validatedToken.ValidTo,
-        });
-
-        return new ParseResult { Token = tokenResult };
+        return new ParseResult(
+            validatedToken.Id ?? null,
+            validatedToken.Issuer ?? null,
+            audiences,
+            (validatedToken.SecurityKey != null && validatedToken.SecurityKey.KeyId != null) ? validatedToken.SecurityKey.KeyId : null,
+            (validatedToken.SigningKey != null && validatedToken.SigningKey.KeyId != null) ? validatedToken.SigningKey.KeyId : null,
+            validatedToken.ValidFrom,
+            validatedToken.ValidTo
+            );
     }
 
     private static readonly ConcurrentDictionary<string, IConfigurationManager<OpenIdConnectConfiguration>> ConfigurationManagerCache = new();

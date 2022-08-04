@@ -39,7 +39,7 @@ public class UnitTests
         };
 
         var result = await OAuth.ParseToken(input, options, default);
-        Assert.IsNotNull(result.Token);
+        Assert.IsNotNull(result.SecurityKeyId != null || result.SigningKeyId != null);
     }
 
     /// <summary>
@@ -67,6 +67,6 @@ public class UnitTests
             DecryptToken = false,
         };
         var result = await OAuth.ParseToken(input, options, default);
-        Assert.IsNotNull(result.Token);
+        Assert.IsNotNull(result.SecurityKeyId != null || result.SigningKeyId != null);
     }
 }
