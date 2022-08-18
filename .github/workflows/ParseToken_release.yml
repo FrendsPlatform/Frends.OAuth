@@ -1,4 +1,4 @@
-name: ParseToken_release
+name: ParseToken release
 
 on:
   workflow_dispatch:
