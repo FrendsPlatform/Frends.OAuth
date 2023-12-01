@@ -5,7 +5,7 @@
 public class TokenResult
 {
 
-    internal TokenResult (string token)
+    internal TokenResult(string token)
     {
         Token = token;
     }
