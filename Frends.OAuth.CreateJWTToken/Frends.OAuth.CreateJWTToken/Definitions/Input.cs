@@ -33,7 +33,7 @@ public class Input
     public DateTime? Expires { get; set; }
 
     /// <summary>
-    /// Value for "nbf" (Not Before) Claim.
+    /// Value for "nbf" (Not Before) Claim. Set to null if you don't want to include it.
     /// </summary>
     /// <example>DateTime.Now.AddDays(1)</example>
     [DefaultValue("DateTime.Now.AddDays(1)")]
@@ -66,22 +66,10 @@ public class Input
     /// </summary>
     /// <example>Name, Value</example>
     public JwtClaim[] Claims { get; set; }
-}
-
-/// <summary>
-/// Class for describing of a single claim.
-/// </summary>
-public class JwtClaim
-{
-    /// <summary>
-    /// Claim key.
-    /// </summary>
-    /// <example>Name</example>
-    public string ClaimKey { get; set; }
 
     /// <summary>
-    /// Claim value.
+    /// Optional custom headers.
     /// </summary>
-    /// <example>Value</example>
-    public string ClaimValue { get; set; }
+    /// <example>kid, fsdjfosabgpasbgbbs</example>
+    public CustomHeader[] CustomHeaders { get; set; }
 }

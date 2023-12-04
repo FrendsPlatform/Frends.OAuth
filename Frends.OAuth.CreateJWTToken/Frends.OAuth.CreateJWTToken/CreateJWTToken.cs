@@ -14,7 +14,7 @@ namespace Frends.OAuth.CreateJWTToken;
 public class OAuth
 {
     /// <summary>
-    /// Create OAuth JWTToken.
+    /// Create JSON Web Token.
     /// [Documentation](https://tasks.frends.com/tasks/frends-tasks/Frends.OAuth.CreateJWTToken)
     /// </summary>
     /// <param name="input">Input parameters</param>
@@ -23,6 +23,7 @@ public class OAuth
     {
         SigningCredentials signingCredentials;
         bool isSymmetric = input.SigningAlgorithm.ToString().StartsWith("HS");
+        using var rsa = RSA.Create();
 
         // If signing algorithm is symmetric, key is not in PEM format and no stream is used to read it.
         if (isSymmetric)
@@ -34,7 +35,6 @@ public class OAuth
         else
         // Default is to use stream and assume PEM format.
         {
-            var rsa = RSA.Create();
             rsa.ImportFromPem(input.PrivateKey);
 
             signingCredentials = new SigningCredentials(key: new RsaSecurityKey(rsa), algorithm: input.SigningAlgorithm.ToString())
@@ -42,12 +42,15 @@ public class OAuth
                 CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false }
             };
         }
-        return new TokenResult { Token = CreateToken(signingCredentials, input, isSymmetric) };
+        return new TokenResult(CreateToken(signingCredentials, input, isSymmetric));
     }
 
     private static string CreateToken(SigningCredentials signingCredentials, Input input, bool usesSymmetricAlgorithm)
     {
-        var handler = new JwtSecurityTokenHandler();
+        var handler = new JwtSecurityTokenHandler
+        {
+            SetDefaultTimesOnTokenCreation = false
+        };
         var claims = new ClaimsIdentity();
         JwtSecurityToken secToken;
 
@@ -55,47 +58,46 @@ public class OAuth
             foreach (var claim in input.Claims)
                 claims.AddClaim(new Claim(claim.ClaimKey, claim.ClaimValue));
 
-        try
+        // x5t Header can be used only when the signing algorithm is asymmetric
+        if (!usesSymmetricAlgorithm && !string.IsNullOrEmpty(input.X509Thumbprint))
         {
-            // x5t Header can be used only when the signing algorithm is asymmetric
-            if (!usesSymmetricAlgorithm && !string.IsNullOrEmpty(input.X509Thumbprint))
+            long expires = DateTimeToUnixTimeStamp(input.Expires ?? DateTime.Now.AddHours(1));
+            long notBefore = DateTimeToUnixTimeStamp(input.NotBefore ?? DateTime.Now);
+            long issuedAt = DateTimeToUnixTimeStamp(DateTime.Now);
+
+            JwtHeader header = new(signingCredentials)
             {
-                long expires = DateTimeToUnixTimeStamp(input.Expires ?? DateTime.Now.AddHours(1));
-                long notBefore = DateTimeToUnixTimeStamp(input.NotBefore ?? DateTime.Now);
-                long issuedAt = DateTimeToUnixTimeStamp(DateTime.Now);
+                { "x5t", input.X509Thumbprint }
+            };
 
-                JwtHeader header = new JwtHeader(signingCredentials);
-                header.Add("x5t", input.X509Thumbprint);
+            var payload = new JwtPayload();
+            payload.AddClaims(claims.Claims);
+            payload.Add("nbf", notBefore);
+            payload.Add("exp", expires);
+            payload.Add("iat", issuedAt); // Static property, always DateTime.Now as unix timestamp
+            payload.Add("iss", input.Issuer);
+            payload.Add("aud", input.Audience);
 
-                JwtPayload payload = new JwtPayload();
-                payload.AddClaims(claims.Claims);
-                payload.Add("nbf", notBefore);
-                payload.Add("exp", expires);
-                payload.Add("iat", issuedAt); // Static property, always DateTime.Now as unix timestamp
-                payload.Add("iss", input.Issuer);
-                payload.Add("aud", input.Audience);
-
-                secToken = new JwtSecurityToken(header, payload);
-            }
-            else
-            {
-                secToken = handler.CreateJwtSecurityToken(new SecurityTokenDescriptor
-                {
-                    Issuer = input.Issuer,
-                    Audience = input.Audience,
-                    Expires = input.Expires,
-                    NotBefore = input.NotBefore,
-                    Subject = claims,
-                    SigningCredentials = signingCredentials,
-                });
-            }
-
-            return handler.WriteToken(secToken).ToString();
+            secToken = new JwtSecurityToken(header, payload);
         }
-        catch (Exception ex)
+        else
         {
-            throw new Exception(ex.ToString());
+            secToken = handler.CreateJwtSecurityToken(new SecurityTokenDescriptor
+            {
+                Issuer = input.Issuer,
+                Audience = input.Audience,
+                IssuedAt = DateTime.UtcNow,
+                Expires = input.Expires,
+                NotBefore = input.NotBefore,
+                Subject = claims,
+                SigningCredentials = signingCredentials,
+            });
         }
+
+        foreach (var customHeader in input.CustomHeaders)
+            secToken.Header.Add(customHeader.Key, customHeader.Value);
+
+        return handler.WriteToken(secToken).ToString();
     }
 
     private static string MapSecurityAlgorithm(string algorithm)
