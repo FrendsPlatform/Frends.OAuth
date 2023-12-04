@@ -1,4 +1,6 @@
-﻿namespace Frends.OAuth.CreateJWTToken.Definitions;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace Frends.OAuth.CreateJWTToken.Definitions;
 
 /// <summary>
 /// Class for describing of a single claim.
@@ -8,12 +10,14 @@ public class JwtClaim
     /// <summary>
     /// Claim key.
     /// </summary>
-    /// <example>Name</example>
+    /// <example>Role</example>
+    [DisplayFormat(DataFormatString = "Text")]
     public string ClaimKey { get; set; }
 
     /// <summary>
     /// Claim value.
     /// </summary>
-    /// <example>Value</example>
+    /// <example>Administrator</example>
+    [DisplayFormat(DataFormatString = "Text")]
     public string ClaimValue { get; set; }
 }

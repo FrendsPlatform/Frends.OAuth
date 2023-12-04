@@ -34,7 +34,7 @@ public class OAuth
         else
         // Default is to use stream and assume PEM format.
         {
-            var rsa = RSA.Create();
+            using var rsa = RSA.Create();
             rsa.ImportFromPem(input.PrivateKey);
 
             signingCredentials = new SigningCredentials(key: new RsaSecurityKey(rsa), algorithm: input.SigningAlgorithm.ToString())
