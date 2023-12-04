@@ -23,6 +23,7 @@ public class OAuth
     {
         SigningCredentials signingCredentials;
         bool isSymmetric = input.SigningAlgorithm.ToString().StartsWith("HS");
+        using var rsa = RSA.Create();
 
         // If signing algorithm is symmetric, key is not in PEM format and no stream is used to read it.
         if (isSymmetric)
@@ -34,7 +35,6 @@ public class OAuth
         else
         // Default is to use stream and assume PEM format.
         {
-            using var rsa = RSA.Create();
             rsa.ImportFromPem(input.PrivateKey);
 
             signingCredentials = new SigningCredentials(key: new RsaSecurityKey(rsa), algorithm: input.SigningAlgorithm.ToString())
