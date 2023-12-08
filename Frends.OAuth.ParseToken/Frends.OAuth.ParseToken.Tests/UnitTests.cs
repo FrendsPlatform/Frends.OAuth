@@ -1,5 +1,6 @@
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Frends.OAuth.ParseToken.Definitions;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
 
 namespace Frends.OAuth.ParseToken.Tests;
@@ -7,29 +8,25 @@ namespace Frends.OAuth.ParseToken.Tests;
 [TestClass]
 public class UnitTests
 {
-    private static readonly string AuthHeader = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Files/AuthHeader.txt"));
+    private static readonly string _authHeader = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Files/AuthHeader.txt"));
     readonly JObject JwkKeys = JObject.Parse(File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Files/JwkKeys.json")));
+    private static Input _input = new();
+    private static Options _options = new();
 
-    Input? input;
-    Options? options;
-
-    /// <summary>
-    /// Parse token with WellKnownConfigurationUrl.
-    /// </summary>
-    [TestMethod]
-    public async Task TokenWithWellKnownUriTest()
+    [TestInitialize]
+    public void Init()
     {
-        input = new Input
+        _input = new Input()
         {
-            StaticJwksConfiguration = null,
-            Issuer = "https://frends.eu.auth0.com/",
             Audience = "fIVLouKUZihXfYP3tdO9D3dwd6ZNS9Be",
-            AuthHeaderOrToken = AuthHeader,
+            AuthHeaderOrToken = _authHeader,
             ConfigurationSource = ConfigurationSource.WellKnownConfigurationUrl,
+            Issuer = "https://frends.eu.auth0.com/",
+            StaticJwksConfiguration = null,
             WellKnownConfigurationUrl = "https://frends.eu.auth0.com/.well-known/openid-configuration"
         };
 
-        options = new Options
+        _options = new Options()
         {
             SkipAudienceValidation = false,
             DecryptionKey = null,
@@ -37,36 +34,93 @@ public class UnitTests
             SkipLifetimeValidation = true,
             DecryptToken = false,
         };
-
-        var result = await OAuth.ParseToken(input, options, default);
-        Assert.IsNotNull(result.SecurityKeyId != null || result.SigningKeyId != null);
     }
 
-    /// <summary>
-    /// Parse token with Static ConfigurationSource.
-    /// </summary>
     [TestMethod]
-    public async Task TokenWithStaticConfigurationTest()
+    public async Task ParseTokenTest_WithWellKnownUri()
     {
-        input = new Input
-        {
-            StaticJwksConfiguration = JwkKeys.ToString(),
-            Issuer = "https://frends.eu.auth0.com/",
-            Audience = "fIVLouKUZihXfYP3tdO9D3dwd6ZNS9Be",
-            AuthHeaderOrToken = AuthHeader,
-            ConfigurationSource = ConfigurationSource.Static,
-            WellKnownConfigurationUrl = null
-        };
+        var result = await OAuth.ParseToken(_input, _options, default);
+        Assert.IsTrue(result.SecurityKeyId != null || result.SigningKeyId != null);
+        Assert.IsTrue(result.Claims.Count > 1);
+    }
 
-        options = new Options
-        {
-            SkipAudienceValidation = false,
-            DecryptionKey = null,
-            SkipIssuerValidation = true,
-            SkipLifetimeValidation = true,
-            DecryptToken = false,
-        };
-        var result = await OAuth.ParseToken(input, options, default);
-        Assert.IsNotNull(result.SecurityKeyId != null || result.SigningKeyId != null);
+    [TestMethod]
+    public async Task ParseTokenTest_WithStaticConfiguration()
+    {
+        _input.StaticJwksConfiguration = JwkKeys.ToString();
+        _input.ConfigurationSource = ConfigurationSource.Static;
+        var result = await OAuth.ParseToken(_input, _options, default);
+        Assert.IsTrue(result.SecurityKeyId != null || result.SigningKeyId != null);
+        Assert.IsTrue(result.Claims.Count > 1);
+    }
+
+    [TestMethod]
+    public async Task ParseTokenTest_Invalid_Audience_Throw()
+    {
+        _input.Audience = "Foo";
+        await Assert.ThrowsExceptionAsync<SecurityTokenInvalidAudienceException>(async () => await OAuth.ParseToken(_input, _options, default));
+    }
+
+    [TestMethod]
+    public async Task ParseTokenTest_Invalid_AuthHeaderOrToken_Throw()
+    {
+        _input.AuthHeaderOrToken = "Foo";
+        await Assert.ThrowsExceptionAsync<ArgumentException>(async () => await OAuth.ParseToken(_input, _options, default));
+    }
+
+    [TestMethod]
+    public async Task ParseTokenTest_Issuer_AnotherIssuer()
+    {
+        _input.Issuer = "Foo";
+        var result = await OAuth.ParseToken(_input, _options, default);
+        Assert.IsTrue(result.SecurityKeyId != null || result.SigningKeyId != null);
+        Assert.IsTrue(result.Claims.Count > 1);
+    }
+
+    [TestMethod]
+    public async Task ParseTokenTest_Issuer_Static()
+    {
+        _input.StaticJwksConfiguration = JwkKeys.ToString();
+        _input.ConfigurationSource = ConfigurationSource.Static;
+        _input.Issuer = "Foo";
+        var result = await OAuth.ParseToken(_input, _options, default);
+        Assert.IsTrue(result.SecurityKeyId != null || result.SigningKeyId != null);
+        Assert.IsTrue(result.Claims.Count > 1);
+    }
+
+    [TestMethod]
+    public async Task ParseTokenTest_SkipAudienceValidation_True()
+    {
+        _options.SkipAudienceValidation = true;
+        var result = await OAuth.ParseToken(_input, _options, default);
+        Assert.IsTrue(result.SecurityKeyId != null || result.SigningKeyId != null);
+        Assert.IsTrue(result.Claims.Count > 1);
+    }
+
+    [TestMethod]
+    public async Task ParseTokenTest_SkipIssuerValidation_False()
+    {
+        _options.SkipIssuerValidation = true;
+        var result = await OAuth.ParseToken(_input, _options, default);
+        Assert.IsTrue(result.SecurityKeyId != null || result.SigningKeyId != null);
+        Assert.IsTrue(result.Claims.Count > 1);
+    }
+
+    [TestMethod]
+    public async Task ParseTokenTest_SkipLifetimeValidation_False()
+    {
+        _options.SkipIssuerValidation = true;
+        var result = await OAuth.ParseToken(_input, _options, default);
+        Assert.IsTrue(result.SecurityKeyId != null || result.SigningKeyId != null);
+        Assert.IsTrue(result.Claims.Count > 1);
+    }
+
+    [TestMethod]
+    public async Task ParseTokenTest_DecryptToken_True()
+    {
+        _options.SkipIssuerValidation = true;
+        var result = await OAuth.ParseToken(_input, _options, default);
+        Assert.IsTrue(result.SecurityKeyId != null || result.SigningKeyId != null);
+        Assert.IsTrue(result.Claims.Count > 1);
     }
 }

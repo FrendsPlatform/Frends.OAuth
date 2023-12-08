@@ -1,9 +1,7 @@
 # Frends.OAuth
-
-Frends tasks for OAuth operations.
+Frends Tasks for OAuth operations.
 
 # Tasks
-
 - [Frends.OAuth.CreateJWTToken](Frends.OAuth.CreateJWTToken/README.md)
 - [Frends.OAuth.ParseToken](Frends.OAuth.ParseToken/README.md)
 
