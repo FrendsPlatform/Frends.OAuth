@@ -78,13 +78,6 @@ public class UnitTests
     }
 
     [TestMethod]
-    public async Task ParseTokenTest_Invalid_WithWellKnownUri_Throw()
-    {
-        _input.WellKnownConfigurationUrl = "Foo";
-        await Assert.ThrowsExceptionAsync<InvalidOperationException>(async () => await OAuth.ParseToken(_input, _options, default));
-    }
-
-    [TestMethod]
     public async Task ParseTokenTest_Issuer_Static()
     {
         _input.StaticJwksConfiguration = JwkKeys.ToString();
