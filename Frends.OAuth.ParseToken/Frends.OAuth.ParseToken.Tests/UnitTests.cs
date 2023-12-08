@@ -40,7 +40,7 @@ public class UnitTests
     public async Task ParseTokenTest_WithWellKnownUri()
     {
         var result = await OAuth.ParseToken(_input, _options, default);
-        Assert.IsNotNull(result.SecurityKeyId != null || result.SigningKeyId != null);
+        Assert.IsTrue(result.SecurityKeyId != null || result.SigningKeyId != null);
         Assert.IsTrue(result.Claims.Count > 1);
     }
 
@@ -50,7 +50,7 @@ public class UnitTests
         _input.StaticJwksConfiguration = JwkKeys.ToString();
         _input.ConfigurationSource = ConfigurationSource.Static;
         var result = await OAuth.ParseToken(_input, _options, default);
-        Assert.IsNotNull(result.SecurityKeyId != null || result.SigningKeyId != null);
+        Assert.IsTrue(result.SecurityKeyId != null || result.SigningKeyId != null);
         Assert.IsTrue(result.Claims.Count > 1);
     }
 
@@ -73,7 +73,7 @@ public class UnitTests
     {
         _input.Issuer = "Foo";
         var result = await OAuth.ParseToken(_input, _options, default);
-        Assert.IsNotNull(result.SecurityKeyId != null || result.SigningKeyId != null);
+        Assert.IsTrue(result.SecurityKeyId != null || result.SigningKeyId != null);
         Assert.IsTrue(result.Claims.Count > 1);
     }
 
@@ -84,7 +84,7 @@ public class UnitTests
         _input.ConfigurationSource = ConfigurationSource.Static;
         _input.Issuer = "Foo";
         var result = await OAuth.ParseToken(_input, _options, default);
-        Assert.IsNotNull(result.SecurityKeyId != null || result.SigningKeyId != null);
+        Assert.IsTrue(result.SecurityKeyId != null || result.SigningKeyId != null);
         Assert.IsTrue(result.Claims.Count > 1);
     }
 
@@ -93,7 +93,7 @@ public class UnitTests
     {
         _options.SkipAudienceValidation = true;
         var result = await OAuth.ParseToken(_input, _options, default);
-        Assert.IsNotNull(result.SecurityKeyId != null || result.SigningKeyId != null);
+        Assert.IsTrue(result.SecurityKeyId != null || result.SigningKeyId != null);
         Assert.IsTrue(result.Claims.Count > 1);
     }
 
@@ -102,7 +102,7 @@ public class UnitTests
     {
         _options.SkipIssuerValidation = true;
         var result = await OAuth.ParseToken(_input, _options, default);
-        Assert.IsNotNull(result.SecurityKeyId != null || result.SigningKeyId != null);
+        Assert.IsTrue(result.SecurityKeyId != null || result.SigningKeyId != null);
         Assert.IsTrue(result.Claims.Count > 1);
     }
 
@@ -111,7 +111,7 @@ public class UnitTests
     {
         _options.SkipIssuerValidation = true;
         var result = await OAuth.ParseToken(_input, _options, default);
-        Assert.IsNotNull(result.SecurityKeyId != null || result.SigningKeyId != null);
+        Assert.IsTrue(result.SecurityKeyId != null || result.SigningKeyId != null);
         Assert.IsTrue(result.Claims.Count > 1);
     }
 
@@ -120,7 +120,7 @@ public class UnitTests
     {
         _options.SkipIssuerValidation = true;
         var result = await OAuth.ParseToken(_input, _options, default);
-        Assert.IsNotNull(result.SecurityKeyId != null || result.SigningKeyId != null);
+        Assert.IsTrue(result.SecurityKeyId != null || result.SigningKeyId != null);
         Assert.IsTrue(result.Claims.Count > 1);
     }
 }
