@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Frends.OAuth.ParseToken.Definitions;
 
@@ -49,7 +50,21 @@ public class ParseResult
     /// <example>2018-10-18 20:00:00</example>
     public DateTime ValidTo { get; private set; }
 
-    internal ParseResult(string id, string issuer, string audiences, string securityKeyId, string signingKeyId, DateTime validFrom, DateTime validTo)
+    /// <summary>
+    /// A dictionary of all claims in the token.
+    /// </summary>
+    /// <example>
+    /// {
+    ///     {"nickname", "foobar"},
+    ///     {"name", "Foo Bar"},
+    ///     {"updated_at", "2018-10-18T10:10:19.4430000Z"},
+    ///     {"iss", "https://foo.bar/"},
+    ///     ...
+    /// }
+    /// </example>
+    public Dictionary<string, dynamic> Claims { get; private set; }
+
+    internal ParseResult(string id, string issuer, string audiences, string securityKeyId, string signingKeyId, DateTime validFrom, DateTime validTo, Dictionary<string, dynamic> claims)
     {
         Id = id;
         Issuer = issuer;
@@ -58,5 +73,6 @@ public class ParseResult
         SigningKeyId = signingKeyId;
         ValidFrom = validFrom;
         ValidTo = validTo;
+        Claims = claims;
     }
 }
