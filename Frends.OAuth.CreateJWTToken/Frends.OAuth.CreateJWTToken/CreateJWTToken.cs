@@ -24,15 +24,16 @@ public class OAuth
         SigningCredentials signingCredentials;
         bool isSymmetric = input.SigningAlgorithm.ToString().StartsWith("HS");
         using var rsa = RSA.Create();
+        using var ecdsa = ECDsa.Create();
 
         // If signing algorithm is symmetric, key is not in PEM format and no stream is used to read it.
         if (isSymmetric)
         {
             var securityKey = Encoding.UTF8.GetBytes(input.PrivateKey);
             var symmetricSecurityKey = new SymmetricSecurityKey(securityKey);
-            signingCredentials = new SigningCredentials(symmetricSecurityKey, MapSecurityAlgorithm(input.SigningAlgorithm.ToString()));
+            signingCredentials = new SigningCredentials(symmetricSecurityKey, input.SigningAlgorithm.ToString());
         }
-        else
+        else if (input.SigningAlgorithm.ToString().StartsWith("RS"))
         // Default is to use stream and assume PEM format.
         {
             rsa.ImportFromPem(input.PrivateKey);
@@ -41,6 +42,11 @@ public class OAuth
             {
                 CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false }
             };
+        }
+        else
+        {
+            ecdsa.ImportFromPem(input.PrivateKey);
+            signingCredentials = new SigningCredentials(new ECDsaSecurityKey(ecdsa), input.SigningAlgorithm.ToString());
         }
         return new TokenResult(CreateToken(signingCredentials, input, isSymmetric));
     }
@@ -98,20 +104,6 @@ public class OAuth
             secToken.Header.Add(customHeader.Key, customHeader.Value);
 
         return handler.WriteToken(secToken).ToString();
-    }
-
-    private static string MapSecurityAlgorithm(string algorithm)
-    {
-        return algorithm switch
-        {
-            "RS256" => SecurityAlgorithms.RsaSha256Signature,
-            "RS384" => SecurityAlgorithms.RsaSha384Signature,
-            "RS512" => SecurityAlgorithms.RsaSha512Signature,
-            "HS256" => SecurityAlgorithms.HmacSha256Signature,
-            "HS384" => SecurityAlgorithms.HmacSha384Signature,
-            "HS512" => SecurityAlgorithms.HmacSha512Signature,
-            _ => SecurityAlgorithms.RsaSha256Signature,
-        };
     }
 
     private static long DateTimeToUnixTimeStamp(DateTime dt)
