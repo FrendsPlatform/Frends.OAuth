@@ -31,7 +31,7 @@ public class OAuth
         {
             var securityKey = Encoding.UTF8.GetBytes(input.PrivateKey);
             var symmetricSecurityKey = new SymmetricSecurityKey(securityKey);
-            signingCredentials = new SigningCredentials(symmetricSecurityKey, MapSecurityAlgorithm(input.SigningAlgorithm.ToString()));
+            signingCredentials = new SigningCredentials(symmetricSecurityKey, input.SigningAlgorithm.ToString());
         }
         else if (input.SigningAlgorithm.ToString().StartsWith("RS"))
         // Default is to use stream and assume PEM format.
@@ -104,20 +104,6 @@ public class OAuth
             secToken.Header.Add(customHeader.Key, customHeader.Value);
 
         return handler.WriteToken(secToken).ToString();
-    }
-
-    private static string MapSecurityAlgorithm(string algorithm)
-    {
-        return algorithm switch
-        {
-            "RS256" => SecurityAlgorithms.RsaSha256Signature,
-            "RS384" => SecurityAlgorithms.RsaSha384Signature,
-            "RS512" => SecurityAlgorithms.RsaSha512Signature,
-            "HS256" => SecurityAlgorithms.HmacSha256Signature,
-            "HS384" => SecurityAlgorithms.HmacSha384Signature,
-            "HS512" => SecurityAlgorithms.HmacSha512Signature,
-            _ => SecurityAlgorithms.RsaSha256Signature,
-        };
     }
 
     private static long DateTimeToUnixTimeStamp(DateTime dt)
