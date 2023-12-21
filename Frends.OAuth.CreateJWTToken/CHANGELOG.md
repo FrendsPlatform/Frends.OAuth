@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.2.0] - 2023-12-21
+### Added
+- Support for ES256, ES384 and ES512 encryption algorithms.
+
 ## [1.1.0] - 2023-12-04
 ### Added
 - Not Before claim set to optional. Added feature to add customer headers to JWT header.

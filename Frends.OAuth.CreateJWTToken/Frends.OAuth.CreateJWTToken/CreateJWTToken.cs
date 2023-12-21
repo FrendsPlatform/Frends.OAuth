@@ -24,6 +24,7 @@ public class OAuth
         SigningCredentials signingCredentials;
         bool isSymmetric = input.SigningAlgorithm.ToString().StartsWith("HS");
         using var rsa = RSA.Create();
+        using var ecdsa = ECDsa.Create();
 
         // If signing algorithm is symmetric, key is not in PEM format and no stream is used to read it.
         if (isSymmetric)
@@ -32,7 +33,7 @@ public class OAuth
             var symmetricSecurityKey = new SymmetricSecurityKey(securityKey);
             signingCredentials = new SigningCredentials(symmetricSecurityKey, MapSecurityAlgorithm(input.SigningAlgorithm.ToString()));
         }
-        else
+        else if (input.SigningAlgorithm.ToString().StartsWith("RS"))
         // Default is to use stream and assume PEM format.
         {
             rsa.ImportFromPem(input.PrivateKey);
@@ -41,6 +42,11 @@ public class OAuth
             {
                 CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false }
             };
+        }
+        else
+        {
+            ecdsa.ImportFromPem(input.PrivateKey);
+            signingCredentials = new SigningCredentials(new ECDsaSecurityKey(ecdsa), input.SigningAlgorithm.ToString());
         }
         return new TokenResult(CreateToken(signingCredentials, input, isSymmetric));
     }

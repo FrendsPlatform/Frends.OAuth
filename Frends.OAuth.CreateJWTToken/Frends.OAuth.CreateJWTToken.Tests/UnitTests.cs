@@ -142,6 +142,84 @@ public class UnitTests
         Assert.AreEqual("fosagfofssago", parsedToken["kid"]);
     }
 
+    [TestMethod]
+    public void CreateJwtTokenWithEs256()
+    {
+        string es256PrivateKey = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Keys/es256private.pem"));
+        input = new Input
+        {
+            NotBefore = null,
+            X509Thumbprint = null,
+            Audience = "aud",
+            Expires = DateTime.Now.AddMinutes(1),
+            Issuer = "frends",
+            PrivateKey = es256PrivateKey,
+            SigningAlgorithm = SigningAlgorithm.ES256,
+            Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Jefim4ik" } },
+            CustomHeaders = Array.Empty<CustomHeader>()
+        };
+
+        var result = OAuth.CreateJWTToken(input);
+        var parsedToken = ParseToken(result.Token, 0);
+        Assert.AreEqual("ES256", parsedToken["alg"]);
+        Assert.IsNotNull(result.Token);
+
+        // JWT tokens always have 2 dot separators between parts.
+        Assert.AreEqual(2, result.Token.Count(i => i.Equals('.')));
+    }
+
+    [TestMethod]
+    public void CreateJwtTokenWithEs384()
+    {
+        string es256PrivateKey = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Keys/es384private.pem"));
+        input = new Input
+        {
+            NotBefore = null,
+            X509Thumbprint = null,
+            Audience = "aud",
+            Expires = DateTime.Now.AddMinutes(1),
+            Issuer = "frends",
+            PrivateKey = es256PrivateKey,
+            SigningAlgorithm = SigningAlgorithm.ES384,
+            Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Jefim4ik" } },
+            CustomHeaders = Array.Empty<CustomHeader>()
+        };
+
+        var result = OAuth.CreateJWTToken(input);
+        var parsedToken = ParseToken(result.Token, 0);
+        Assert.AreEqual("ES384", parsedToken["alg"]);
+        Assert.IsNotNull(result.Token);
+
+        // JWT tokens always have 2 dot separators between parts.
+        Assert.AreEqual(2, result.Token.Count(i => i.Equals('.')));
+    }
+
+    [TestMethod]
+    public void CreateJwtTokenWithEs512()
+    {
+        string es256PrivateKey = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Keys/es512private.pem"));
+        input = new Input
+        {
+            NotBefore = null,
+            X509Thumbprint = null,
+            Audience = "aud",
+            Expires = DateTime.Now.AddMinutes(1),
+            Issuer = "frends",
+            PrivateKey = es256PrivateKey,
+            SigningAlgorithm = SigningAlgorithm.ES512,
+            Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Jefim4ik" } },
+            CustomHeaders = Array.Empty<CustomHeader>()
+        };
+
+        var result = OAuth.CreateJWTToken(input);
+        var parsedToken = ParseToken(result.Token, 0);
+        Assert.AreEqual("ES512", parsedToken["alg"]);
+        Assert.IsNotNull(result.Token);
+
+        // JWT tokens always have 2 dot separators between parts.
+        Assert.AreEqual(2, result.Token.Count(i => i.Equals('.')));
+    }
+
     private static JObject ParseToken(string token, int splitIndex)
     {
         var handler = new JwtSecurityTokenHandler();
