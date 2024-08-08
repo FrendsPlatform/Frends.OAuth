@@ -9,6 +9,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.IdentityModel.Tokens.Jwt;
 using System.IO;
+using System.Linq;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using ThirdParty.BouncyCastle.OpenSsl;
@@ -56,10 +58,21 @@ public class OAuth
         var audiences = "";
         var claims = new Dictionary<string, dynamic>();
 
+        IEnumerable<Claim> claimsWithSameType;
         foreach (var claim in validateToken.Claims)
         {
-            claims.Add(claim.Type, claim.Value);
-            if (claim.Type == "aud") audiences = claim.Value;
+            if (claims.ContainsKey(claim.Type)) continue;
+
+            claimsWithSameType = validateToken.Claims.Where(c => c.Type == claim.Type);
+            if (claimsWithSameType.Count() > 1)
+            {
+                claims.Add(claim.Type, claimsWithSameType.Select(c => c.Value).ToArray());
+            } 
+            else
+            {
+                claims.Add(claim.Type, claim.Value);
+                if (claim.Type == "aud") audiences = claim.Value;
+            }
         }
 
         return new ParseResult(
