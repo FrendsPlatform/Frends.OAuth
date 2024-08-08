@@ -67,7 +67,7 @@ public class OAuth
             if (claimsWithSameType.Count() > 1)
             {
                 claims.Add(claim.Type, claimsWithSameType.Select(c => c.Value).ToArray());
-            } 
+            }
             else
             {
                 claims.Add(claim.Type, claim.Value);
