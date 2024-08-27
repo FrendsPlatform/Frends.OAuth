@@ -97,7 +97,7 @@ public class OAuth
         {
             var configuration = new OpenIdConnectConfiguration()
             {
-                JsonWebKeySet = JsonConvert.DeserializeObject<JsonWebKeySet>(input.StaticJwksConfiguration)
+                JsonWebKeySet = JsonWebKeySet.Create(input.StaticJwksConfiguration)
             };
             foreach (var key in configuration.JsonWebKeySet.GetSigningKeys())
                 configuration.SigningKeys.Add(key);

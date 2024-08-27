@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.2.0] - 2024-08-21
+### Added
+- Support for new IdentityModel-versions.
+
 ## [1.2.0] - 2024-08-08
 ### Added
 - Support for handling array-type claims in the token, such as `"roles": ["editor", "admin"]`.
