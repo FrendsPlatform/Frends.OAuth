@@ -3,9 +3,6 @@
 ## [1.2.0] - 2024-08-21
 ### Added
 - Support for new IdentityModel-versions.
-
-## [1.2.0] - 2024-08-08
-### Added
 - Support for handling array-type claims in the token, such as `"roles": ["editor", "admin"]`.
 
 ## [1.1.0] - 2023-12-08
