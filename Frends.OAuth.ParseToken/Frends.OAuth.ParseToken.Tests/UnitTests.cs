@@ -65,7 +65,7 @@ public class UnitTests
     public async Task ParseTokenTest_Invalid_AuthHeaderOrToken_Throw()
     {
         _input.AuthHeaderOrToken = "Foo";
-        await Assert.ThrowsExceptionAsync<ArgumentException>(async () => await OAuth.ParseToken(_input, _options, default));
+        await Assert.ThrowsExceptionAsync<SecurityTokenMalformedException>(async () => await OAuth.ParseToken(_input, _options, default));
     }
 
     [TestMethod]

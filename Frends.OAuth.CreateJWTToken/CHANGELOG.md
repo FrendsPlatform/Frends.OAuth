@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.3.0] - 2024-08-21
+### Added
+- Support for new IdentityModel-version.
+
 ## [1.2.0] - 2023-12-21
 ### Added
 - Support for ES256, ES384 and ES512 encryption algorithms.
