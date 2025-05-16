@@ -23,32 +23,43 @@ public class OAuth
     {
         SigningCredentials signingCredentials;
         bool isSymmetric = input.SigningAlgorithm.ToString().StartsWith("HS");
-        using var rsa = RSA.Create();
-        using var ecdsa = ECDsa.Create();
+        RSA rsa = null;
+        ECDsa ecdsa = null;
 
-        // If signing algorithm is symmetric, key is not in PEM format and no stream is used to read it.
-        if (isSymmetric)
+        try
         {
-            var securityKey = Encoding.UTF8.GetBytes(input.PrivateKey);
-            var symmetricSecurityKey = new SymmetricSecurityKey(securityKey);
-            signingCredentials = new SigningCredentials(symmetricSecurityKey, input.SigningAlgorithm.ToString());
-        }
-        else if (input.SigningAlgorithm.ToString().StartsWith("RS"))
-        // Default is to use stream and assume PEM format.
-        {
-            rsa.ImportFromPem(input.PrivateKey);
-
-            signingCredentials = new SigningCredentials(key: new RsaSecurityKey(rsa), algorithm: input.SigningAlgorithm.ToString())
+            // If signing algorithm is symmetric, key is not in PEM format and no stream is used to read it.
+            if (isSymmetric)
             {
-                CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false }
-            };
+                var securityKey = Encoding.UTF8.GetBytes(input.PrivateKey);
+                var symmetricSecurityKey = new SymmetricSecurityKey(securityKey);
+                signingCredentials = new SigningCredentials(symmetricSecurityKey, input.SigningAlgorithm.ToString());
+            }
+            else if (input.SigningAlgorithm.ToString().StartsWith("RS"))
+            // Default is to use stream and assume PEM format.
+            {
+                rsa = RSA.Create();
+                rsa.ImportFromPem(input.PrivateKey);
+
+                signingCredentials = new SigningCredentials(key: new RsaSecurityKey(rsa), algorithm: input.SigningAlgorithm.ToString())
+                {
+                    CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false }
+                };
+            }
+            else
+            {
+                ecdsa = ECDsa.Create();
+                ecdsa.ImportFromPem(input.PrivateKey);
+                signingCredentials = new SigningCredentials(new ECDsaSecurityKey(ecdsa), input.SigningAlgorithm.ToString());
+            }
+
+            return new TokenResult(CreateToken(signingCredentials, input, isSymmetric));
         }
-        else
+        finally
         {
-            ecdsa.ImportFromPem(input.PrivateKey);
-            signingCredentials = new SigningCredentials(new ECDsaSecurityKey(ecdsa), input.SigningAlgorithm.ToString());
+            rsa?.Dispose();
+            ecdsa?.Dispose();
         }
-        return new TokenResult(CreateToken(signingCredentials, input, isSymmetric));
     }
 
     private static string CreateToken(SigningCredentials signingCredentials, Input input, bool usesSymmetricAlgorithm)
