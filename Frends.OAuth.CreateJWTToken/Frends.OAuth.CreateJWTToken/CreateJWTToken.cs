@@ -22,34 +22,35 @@ public static class OAuth
     public static TokenResult CreateJWTToken(Input input)
     {
         SigningCredentials signingCredentials;
-        bool isSymmetric = input.SigningAlgorithm.ToString().StartsWith("HS");
-        var rsa = RSA.Create();
-        var ecdsa = ECDsa.Create() ?? throw new InvalidOperationException("ECDsa.Create() returned null");
 
-        // If the signing algorithm is symmetric, the key is not in PEM format and no stream is used to read it.
-        if (isSymmetric)
+        switch (input.SigningAlgorithm.ToString())
         {
-            var securityKey = Encoding.UTF8.GetBytes(input.PrivateKey);
-            var symmetricSecurityKey = new SymmetricSecurityKey(securityKey);
-            signingCredentials = new SigningCredentials(symmetricSecurityKey, input.SigningAlgorithm.ToString());
-        }
-        else if (input.SigningAlgorithm.ToString().StartsWith("RS"))
-            // The default is to use stream and assume a PEM format.
-        {
-            rsa.ImportFromPem(input.PrivateKey);
-            signingCredentials = new SigningCredentials(new RsaSecurityKey(rsa), input.SigningAlgorithm.ToString());
-        }
-        else
-        {
-            ecdsa.ImportFromPem(input.PrivateKey);
-            signingCredentials = new SigningCredentials(new ECDsaSecurityKey(ecdsa), input.SigningAlgorithm.ToString());
+            case { } s when s.StartsWith("HS"): // symmetric
+                var securityKey = Encoding.UTF8.GetBytes(input.PrivateKey);
+                var symmetricSecurityKey = new SymmetricSecurityKey(securityKey);
+                signingCredentials = new SigningCredentials(symmetricSecurityKey, input.SigningAlgorithm.ToString());
+                break;
+            case { } s when s.StartsWith("RS"): // asymmetric
+                var rsa = RSA.Create();
+                rsa.ImportFromPem(input.PrivateKey);
+                signingCredentials = new SigningCredentials(new RsaSecurityKey(rsa), input.SigningAlgorithm.ToString());
+                break;
+            case { } s when s.StartsWith("ES"): // asymmetric
+                var ecdsa = ECDsa.Create() ?? throw new InvalidOperationException("ECDsa.Create() returned null");
+                ecdsa.ImportFromPem(input.PrivateKey);
+                signingCredentials =
+                    new SigningCredentials(new ECDsaSecurityKey(ecdsa), input.SigningAlgorithm.ToString());
+                break;
+            default:
+                throw new ArgumentException($"Signing algorithm {input.SigningAlgorithm} is not supported.");
         }
 
-        return new TokenResult(CreateToken(signingCredentials, input, isSymmetric));
+        return new TokenResult(CreateToken(signingCredentials, input));
     }
 
-    private static string CreateToken(SigningCredentials signingCredentials, Input input, bool usesSymmetricAlgorithm)
+    private static string CreateToken(SigningCredentials signingCredentials, Input input)
     {
+        bool usesSymmetricHsAlgorithm = input.SigningAlgorithm.ToString().StartsWith("HS");
         var handler = new JwtSecurityTokenHandler { SetDefaultTimesOnTokenCreation = false };
         var claims = new ClaimsIdentity();
         JwtSecurityToken secToken;
@@ -59,7 +60,7 @@ public static class OAuth
                 claims.AddClaim(new Claim(claim.ClaimKey, claim.ClaimValue));
 
         // x5t Header can be used only when the signing algorithm is asymmetric
-        if (!usesSymmetricAlgorithm && !string.IsNullOrEmpty(input.X509Thumbprint))
+        if (!usesSymmetricHsAlgorithm && !string.IsNullOrEmpty(input.X509Thumbprint))
         {
             long expires = DateTimeToUnixTimeStamp(input.Expires ?? DateTime.Now.AddHours(1));
             long notBefore = DateTimeToUnixTimeStamp(input.NotBefore ?? DateTime.Now);
