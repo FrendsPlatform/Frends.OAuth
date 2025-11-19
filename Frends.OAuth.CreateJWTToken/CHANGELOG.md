@@ -3,7 +3,7 @@
 ## [1.4.0] - 2025-11-18
 ### Fixes
 - Fix disposing of a private key issue when a task is reused in a process.
-- 
+
 ## [1.3.0] - 2024-08-21
 ### Added
 - Support for new IdentityModel-version.
