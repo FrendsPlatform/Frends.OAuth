@@ -9,6 +9,7 @@ namespace Frends.OAuth.ParseToken.Tests;
 public class UnitTests
 {
     private static readonly string _authHeader = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Files/AuthHeader.txt"));
+    private static readonly string _authHeaderWithArrayTypeClaim = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Files/AuthHeaderWithArrayTypeClaim.txt"));
     readonly JObject JwkKeys = JObject.Parse(File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Files/JwkKeys.json")));
     private static Input _input = new();
     private static Options _options = new();
@@ -52,6 +53,24 @@ public class UnitTests
         var result = await OAuth.ParseToken(_input, _options, default);
         Assert.IsTrue(result.SecurityKeyId != null || result.SigningKeyId != null);
         Assert.IsTrue(result.Claims.Count > 1);
+    }
+
+    [TestMethod]
+    public async Task ParseTokenTest_WithArrayTypeClaim()
+    {
+        _input.AuthHeaderOrToken = _authHeaderWithArrayTypeClaim;
+        _input.ConfigurationSource = ConfigurationSource.Static;
+        _input.StaticJwksConfiguration = JwkKeys.ToString();
+        var result = await OAuth.ParseToken(_input, _options, default);
+        Assert.IsTrue(result.Claims.Count > 1);
+        Assert.IsInstanceOfType(result.Claims["test_array"], typeof(Array));
+
+        var arrayValues = (string[])result.Claims["test_array"];
+        Assert.AreEqual(4, arrayValues.Length);
+        Assert.AreEqual("item1", arrayValues[0]);
+        Assert.AreEqual("item2", arrayValues[1]);
+        Assert.AreEqual("item3", arrayValues[2]);
+        Assert.AreEqual("item4", arrayValues[3]);
     }
 
     [TestMethod]
