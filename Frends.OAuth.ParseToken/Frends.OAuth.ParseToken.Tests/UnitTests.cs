@@ -64,6 +64,13 @@ public class UnitTests
         var result = await OAuth.ParseToken(_input, _options, default);
         Assert.IsTrue(result.Claims.Count > 1);
         Assert.IsInstanceOfType(result.Claims["test_array"], typeof(Array));
+        
+        var arrayValues = (string[])result.Claims["test_array"];
+        Assert.AreEqual(4, arrayValues.Length);
+        Assert.AreEqual("item1", arrayValues[0]);
+        Assert.AreEqual("item2", arrayValues[1]);
+        Assert.AreEqual("item3", arrayValues[2]);
+        Assert.AreEqual("item4", arrayValues[3]);
     }
 
     [TestMethod]
