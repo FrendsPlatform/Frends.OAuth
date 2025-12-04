@@ -1,7 +1,5 @@
 ﻿using System;
 using System.IdentityModel.Tokens.Jwt;
-using System.Reflection;
-using System.Runtime.Loader;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -15,9 +13,6 @@ namespace Frends.OAuth.CreateJWTToken;
 /// </summary>
 public static class OAuth
 {
-    private static RSA rsa;
-    private static ECDsa ecdsa;
-
     /// <summary>
     /// Create JSON Web Token.
     /// [Documentation](https://tasks.frends.com/tasks/frends-tasks/Frends.OAuth.CreateJWTToken)
@@ -27,6 +22,8 @@ public static class OAuth
     public static TokenResult CreateJWTToken(Input input)
     {
         SigningCredentials signingCredentials;
+        using var rsa = RSA.Create();
+        using var ecdsa = ECDsa.Create() ?? throw new InvalidOperationException("ECDsa.Create() returned null");
 
         switch (input.SigningAlgorithm.ToString())
         {
@@ -36,38 +33,30 @@ public static class OAuth
                 signingCredentials = new SigningCredentials(symmetricSecurityKey, input.SigningAlgorithm.ToString());
                 break;
             case { } s when s.StartsWith("RS"): // asymmetric
-                rsa = RSA.Create();
                 rsa.ImportFromPem(input.PrivateKey);
-                signingCredentials = new SigningCredentials(new RsaSecurityKey(rsa), input.SigningAlgorithm.ToString());
+                signingCredentials =
+                    new SigningCredentials(
+                        new RsaSecurityKey(rsa)
+                        {
+                            CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false }
+                        },
+                        input.SigningAlgorithm.ToString());
                 break;
             case { } s when s.StartsWith("ES"): // asymmetric
-                ecdsa = ECDsa.Create() ?? throw new InvalidOperationException("ECDsa.Create() returned null");
                 ecdsa.ImportFromPem(input.PrivateKey);
                 signingCredentials =
-                    new SigningCredentials(new ECDsaSecurityKey(ecdsa), input.SigningAlgorithm.ToString());
+                    new SigningCredentials(
+                        new ECDsaSecurityKey(ecdsa)
+                        {
+                            CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false }
+                        },
+                        input.SigningAlgorithm.ToString());
                 break;
             default:
                 throw new ArgumentException($"Signing algorithm {input.SigningAlgorithm} is not supported.");
         }
 
-        var currentAssembly = Assembly.GetExecutingAssembly();
-        var currentContext = AssemblyLoadContext.GetLoadContext(currentAssembly);
-        if (currentContext != null)
-        {
-            currentContext.Unloading += OnPluginUnloadingRequested;
-        }
-
         return new TokenResult(CreateToken(signingCredentials, input));
-    }
-
-    private static void OnPluginUnloadingRequested(AssemblyLoadContext obj)
-    {
-        // Dispose resources
-        rsa?.Dispose();
-        ecdsa?.Dispose();
-
-        // Unwire event
-        obj.Unloading -= OnPluginUnloadingRequested;
     }
 
     private static string CreateToken(SigningCredentials signingCredentials, Input input)
