@@ -8,10 +8,37 @@ namespace Frends.OAuth.CreateJWTToken.Tests;
 [TestClass]
 public class UnitTests
 {
-    private static readonly string privateKey = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Keys/PK.pem")); //PK from community task
-    private static readonly string x5t = "m5836ev678LlLGyFEdq+Ec71Inw="; //x5t from community task
+    private static readonly string KeysDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Keys");
+
+    private static readonly string PrivateKey = File.ReadAllText(Path.Combine(KeysDirectory, "PK.pem"));
+    private static readonly string Es512PrivateKey = File.ReadAllText(Path.Combine(KeysDirectory, "es512private.pem"));
+    private static readonly string Es256PrivateKey = File.ReadAllText(Path.Combine(KeysDirectory, "es256private.pem"));
+    private static readonly string Es384PrivateKey = File.ReadAllText(Path.Combine(KeysDirectory, "es384private.pem"));
+
+    private const string X5T = "m5836ev678LlLGyFEdq+Ec71Inw=";
 
     Input? input;
+
+    [TestMethod]
+    public void KeysAreNotDisposed()
+    {
+        input = new Input
+        {
+            NotBefore = null,
+            X509Thumbprint = null,
+            Audience = "aud",
+            Expires = DateTime.Now.AddMinutes(1),
+            Issuer = "frends",
+            PrivateKey = Es512PrivateKey,
+            SigningAlgorithm = SigningAlgorithm.ES512,
+            Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Jefim4ik" } },
+            CustomHeaders = Array.Empty<CustomHeader>()
+        };
+        var first = OAuth.CreateJWTToken(input);
+        Assert.IsNotNull(first);
+        var second = OAuth.CreateJWTToken(input);
+        Assert.IsNotNull(second);
+    }
 
     /// <summary>
     /// Symmetric test.
@@ -24,7 +51,7 @@ public class UnitTests
             Audience = "aud",
             Expires = DateTime.Now.AddMinutes(1),
             Issuer = "frends",
-            PrivateKey = privateKey,
+            PrivateKey = PrivateKey,
             SigningAlgorithm = SigningAlgorithm.HS256,
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Claimer" } },
             CustomHeaders = Array.Empty<CustomHeader>()
@@ -41,7 +68,7 @@ public class UnitTests
     /// Create without X509Thumbprint -> Asymmetric.
     /// </summary>
     [TestMethod]
-    public void CreateJwtTokenWithoutX5tTest()
+    public void CreateJwtTokenWithoutX5TTest()
     {
         input = new Input
         {
@@ -50,7 +77,7 @@ public class UnitTests
             Audience = "aud",
             Expires = DateTime.Now.AddMinutes(1),
             Issuer = "frends",
-            PrivateKey = privateKey,
+            PrivateKey = PrivateKey,
             SigningAlgorithm = SigningAlgorithm.RS256,
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Jefim4ik" } },
             CustomHeaders = Array.Empty<CustomHeader>()
@@ -61,23 +88,22 @@ public class UnitTests
 
         // JWT tokens always have 2 dot separators between parts.
         Assert.AreEqual(2, result.Token.Count(i => i.Equals('.')));
-
     }
 
     /// <summary>
     /// Asymmetric.
     /// </summary>
     [TestMethod]
-    public void CreateJwtTokenWithX5tTest()
+    public void CreateJwtTokenWithX5TTest()
     {
         input = new Input
         {
             NotBefore = null,
-            X509Thumbprint = x5t,
+            X509Thumbprint = X5T,
             Audience = "aud",
             Expires = DateTime.Now.AddMinutes(1),
             Issuer = "frends",
-            PrivateKey = privateKey,
+            PrivateKey = PrivateKey,
             SigningAlgorithm = SigningAlgorithm.RS256,
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Claimer" } },
             CustomHeaders = Array.Empty<CustomHeader>()
@@ -103,7 +129,7 @@ public class UnitTests
             Audience = "aud",
             Expires = DateTime.Now.AddMinutes(1),
             Issuer = "frends",
-            PrivateKey = privateKey,
+            PrivateKey = PrivateKey,
             SigningAlgorithm = SigningAlgorithm.RS256,
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Claimer" } },
             CustomHeaders = Array.Empty<CustomHeader>()
@@ -129,23 +155,22 @@ public class UnitTests
             Audience = "aud",
             Expires = DateTime.Now.AddMinutes(1),
             Issuer = "frends",
-            PrivateKey = privateKey,
+            PrivateKey = PrivateKey,
             SigningAlgorithm = SigningAlgorithm.RS256,
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Claimer" } },
-            CustomHeaders = new CustomHeader[] { new CustomHeader { Key = "kid", Value = "fosagfofssago" } }
+            CustomHeaders = new[] { new CustomHeader { Key = "kid", Value = "foobar" } }
         };
 
         var result = OAuth.CreateJWTToken(input);
         Assert.IsNotNull(result.Token);
 
         var parsedToken = ParseToken(result.Token, 0);
-        Assert.AreEqual("fosagfofssago", parsedToken["kid"]);
+        Assert.AreEqual("foobar", parsedToken["kid"]);
     }
 
     [TestMethod]
     public void CreateJwtTokenWithEs256()
     {
-        string es256PrivateKey = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Keys/es256private.pem"));
         input = new Input
         {
             NotBefore = null,
@@ -153,7 +178,7 @@ public class UnitTests
             Audience = "aud",
             Expires = DateTime.Now.AddMinutes(1),
             Issuer = "frends",
-            PrivateKey = es256PrivateKey,
+            PrivateKey = Es256PrivateKey,
             SigningAlgorithm = SigningAlgorithm.ES256,
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Jefim4ik" } },
             CustomHeaders = Array.Empty<CustomHeader>()
@@ -171,7 +196,6 @@ public class UnitTests
     [TestMethod]
     public void CreateJwtTokenWithEs384()
     {
-        string es256PrivateKey = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Keys/es384private.pem"));
         input = new Input
         {
             NotBefore = null,
@@ -179,7 +203,7 @@ public class UnitTests
             Audience = "aud",
             Expires = DateTime.Now.AddMinutes(1),
             Issuer = "frends",
-            PrivateKey = es256PrivateKey,
+            PrivateKey = Es384PrivateKey,
             SigningAlgorithm = SigningAlgorithm.ES384,
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Jefim4ik" } },
             CustomHeaders = Array.Empty<CustomHeader>()
@@ -197,7 +221,6 @@ public class UnitTests
     [TestMethod]
     public void CreateJwtTokenWithEs512()
     {
-        string es256PrivateKey = File.ReadAllText(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Keys/es512private.pem"));
         input = new Input
         {
             NotBefore = null,
@@ -205,7 +228,7 @@ public class UnitTests
             Audience = "aud",
             Expires = DateTime.Now.AddMinutes(1),
             Issuer = "frends",
-            PrivateKey = es256PrivateKey,
+            PrivateKey = Es512PrivateKey,
             SigningAlgorithm = SigningAlgorithm.ES512,
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Jefim4ik" } },
             CustomHeaders = Array.Empty<CustomHeader>()
