@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.4.0] - 2026-11-02
+### Added
+- Options.ClockSkewSeconds for configuring clock skew tolerance in lifetime validation (default 300 seconds, same as before).
+
 ## [1.3.0] - 2025-12-02
 ### Added
 - Support for handling array-type claims in the token, such as `"roles": ["editor", "admin"]`.

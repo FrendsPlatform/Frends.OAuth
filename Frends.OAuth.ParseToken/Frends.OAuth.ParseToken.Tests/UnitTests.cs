@@ -135,6 +135,68 @@ public class UnitTests
     }
 
     [TestMethod]
+    public async Task ParseTokenTest_ClockSkew_Zero_ExpiredToken_Throws()
+    {
+        SetupExpiredToken(TimeSpan.FromSeconds(60));
+        _options.SkipLifetimeValidation = false;
+        _options.ClockSkewSeconds = 0;
+        await Assert.ThrowsExceptionAsync<SecurityTokenExpiredException>(async () => await OAuth.ParseToken(_input, _options, default));
+    }
+
+    [TestMethod]
+    public async Task ParseTokenTest_ClockSkew_Larger_Than_Expiry_Passes()
+    {
+        SetupExpiredToken(TimeSpan.FromSeconds(60));
+        _options.SkipLifetimeValidation = false;
+        _options.ClockSkewSeconds = 300;
+        var result = await OAuth.ParseToken(_input, _options, default);
+        Assert.IsTrue(result.Claims.Count > 0);
+    }
+
+    [TestMethod]
+    public async Task ParseTokenTest_ClockSkew_Smaller_Than_Expiry_Throws()
+    {
+        SetupExpiredToken(TimeSpan.FromSeconds(600));
+        _options.SkipLifetimeValidation = false;
+        _options.ClockSkewSeconds = 300;
+        await Assert.ThrowsExceptionAsync<SecurityTokenExpiredException>(async () => await OAuth.ParseToken(_input, _options, default));
+    }
+
+    [TestMethod]
+    public async Task ParseTokenTest_ClockSkew_Ignored_When_SkipLifetimeValidation_True()
+    {
+        SetupExpiredToken(TimeSpan.FromHours(1));
+        _options.SkipLifetimeValidation = true;
+        _options.ClockSkewSeconds = 0;
+        var result = await OAuth.ParseToken(_input, _options, default);
+        Assert.IsTrue(result.Claims.Count > 0);
+    }
+
+    // Creates a token signed with a generated key that expired the given time ago and configures static JWKS for it.
+    private static void SetupExpiredToken(TimeSpan expiredAgo)
+    {
+        using var rsa = System.Security.Cryptography.RSA.Create(2048);
+        var key = new RsaSecurityKey(rsa.ExportParameters(true)) { KeyId = "test-key" };
+        var now = DateTime.UtcNow;
+        var descriptor = new SecurityTokenDescriptor
+        {
+            Audience = _input.Audience,
+            Issuer = _input.Issuer,
+            NotBefore = now - expiredAgo - TimeSpan.FromMinutes(10),
+            IssuedAt = now - expiredAgo - TimeSpan.FromMinutes(10),
+            Expires = now - expiredAgo,
+            SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.RsaSha256)
+        };
+        var token = new System.IdentityModel.Tokens.Jwt.JwtSecurityTokenHandler().CreateEncodedJwt(descriptor);
+
+        var publicKey = new RsaSecurityKey(rsa.ExportParameters(false)) { KeyId = "test-key" };
+        var jwk = JsonWebKeyConverter.ConvertFromRSASecurityKey(publicKey);
+        _input.AuthHeaderOrToken = token;
+        _input.ConfigurationSource = ConfigurationSource.Static;
+        _input.StaticJwksConfiguration = new JObject { ["keys"] = new JArray(JObject.Parse(System.Text.Json.JsonSerializer.Serialize(new { kty = jwk.Kty, kid = jwk.Kid, use = "sig", alg = "RS256", n = jwk.N, e = jwk.E }))) }.ToString();
+    }
+
+    [TestMethod]
     public async Task ParseTokenTest_DecryptToken_True()
     {
         _options.SkipIssuerValidation = true;
