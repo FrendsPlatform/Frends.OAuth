@@ -49,6 +49,7 @@ public class OAuth
             ValidAudiences = new[] { input.Audience },
             IssuerSigningKeys = config.SigningKeys,
             ValidateLifetime = !options.SkipLifetimeValidation,
+            ClockSkew = TimeSpan.FromSeconds(Math.Max(0, options.ClockSkewSeconds)),
             ValidateAudience = !options.SkipAudienceValidation,
             ValidateIssuer = !options.SkipIssuerValidation,
             TokenDecryptionKeys = options.DecryptToken ? decryptionKeys : null

@@ -27,6 +27,14 @@ public class Options
     public bool SkipLifetimeValidation { get; set; }
 
     /// <summary>
+    /// Clock skew tolerance in seconds applied to lifetime (exp,nbf) validation. Use 0 for no tolerance.
+    /// </summary>
+    /// <example>300</example>
+    [DefaultValue(300)]
+    [UIHint(nameof(SkipLifetimeValidation), "", false)]
+    public int ClockSkewSeconds { get; set; } = 300;
+
+    /// <summary>
     /// Should the Token be decrypted.
     /// </summary>
     /// <example>True</example>
