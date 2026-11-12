@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.5.0] - 2026-11-12
+### Added
+- Added standard task options and cancellation support.
+### Fixed
+- Updated the task and tests to target .NET 8.
+
 ## [1.4.0] - 2025-11-18
 ### Fixes
 - Fix disposing of a private key issue when a task is reused in a process.

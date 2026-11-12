@@ -1,8 +1,10 @@
 ﻿using System;
+using System.ComponentModel;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
+using System.Threading;
 using Frends.OAuth.CreateJWTToken.Definitions;
 using Microsoft.IdentityModel.Tokens;
 
@@ -18,9 +20,13 @@ public static class OAuth
     /// [Documentation](https://tasks.frends.com/tasks/frends-tasks/Frends.OAuth.CreateJWTToken)
     /// </summary>
     /// <param name="input">Input parameters</param>
-    /// <returns>Object { string Token }</returns>
-    public static TokenResult CreateJWTToken(Input input)
+    /// <param name="options">Additional parameters</param>
+    /// <param name="cancellationToken">A cancellation token provided by Frends Platform.</param>
+    /// <returns>object { string Token }</returns>
+    public static Result CreateJWTToken([PropertyTab] Input input, [PropertyTab] Options options, CancellationToken cancellationToken)
     {
+        cancellationToken.ThrowIfCancellationRequested();
+
         SigningCredentials signingCredentials;
         using var rsa = RSA.Create();
         using var ecdsa = ECDsa.Create() ?? throw new InvalidOperationException("ECDsa.Create() returned null");
@@ -38,7 +44,7 @@ public static class OAuth
                     new SigningCredentials(
                         new RsaSecurityKey(rsa)
                         {
-                            CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false }
+                            CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false },
                         },
                         input.SigningAlgorithm.ToString());
                 break;
@@ -48,7 +54,7 @@ public static class OAuth
                     new SigningCredentials(
                         new ECDsaSecurityKey(ecdsa)
                         {
-                            CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false }
+                            CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false },
                         },
                         input.SigningAlgorithm.ToString());
                 break;
@@ -56,7 +62,7 @@ public static class OAuth
                 throw new ArgumentException($"Signing algorithm {input.SigningAlgorithm} is not supported.");
         }
 
-        return new TokenResult(CreateToken(signingCredentials, input));
+        return new Result(CreateToken(signingCredentials, input));
     }
 
     private static string CreateToken(SigningCredentials signingCredentials, Input input)
@@ -67,8 +73,10 @@ public static class OAuth
         JwtSecurityToken secToken;
 
         if (input.Claims != null)
+        {
             foreach (var claim in input.Claims)
                 claims.AddClaim(new Claim(claim.ClaimKey, claim.ClaimValue));
+        }
 
         // x5t Header can be used only when the signing algorithm is asymmetric
         if (!usesSymmetricHsAlgorithm && !string.IsNullOrEmpty(input.X509Thumbprint))

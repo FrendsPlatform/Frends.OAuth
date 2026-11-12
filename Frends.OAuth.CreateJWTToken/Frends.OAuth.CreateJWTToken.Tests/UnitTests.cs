@@ -34,10 +34,17 @@ public class UnitTests
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Jefim4ik" } },
             CustomHeaders = Array.Empty<CustomHeader>()
         };
-        var first = OAuth.CreateJWTToken(input);
+        var first = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         Assert.IsNotNull(first);
-        var second = OAuth.CreateJWTToken(input);
+        var second = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         Assert.IsNotNull(second);
+    }
+
+    [TestMethod]
+    public void CreateJwtTokenHonorsCancellation()
+    {
+        Assert.ThrowsException<OperationCanceledException>(() =>
+            OAuth.CreateJWTToken(new Input(), new Options(), new CancellationToken(true)));
     }
 
     /// <summary>
@@ -57,7 +64,7 @@ public class UnitTests
             CustomHeaders = Array.Empty<CustomHeader>()
         };
 
-        var result = OAuth.CreateJWTToken(input);
+        var result = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         Assert.IsNotNull(result.Token);
 
         // JWT tokens always have 2 dot separators between parts.
@@ -83,7 +90,7 @@ public class UnitTests
             CustomHeaders = Array.Empty<CustomHeader>()
         };
 
-        var result = OAuth.CreateJWTToken(input);
+        var result = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         Assert.IsNotNull(result.Token);
 
         // JWT tokens always have 2 dot separators between parts.
@@ -109,7 +116,7 @@ public class UnitTests
             CustomHeaders = Array.Empty<CustomHeader>()
         };
 
-        var result = OAuth.CreateJWTToken(input);
+        var result = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         Assert.IsNotNull(result.Token);
 
         // JWT tokens always have 2 dot separators between parts.
@@ -135,7 +142,7 @@ public class UnitTests
             CustomHeaders = Array.Empty<CustomHeader>()
         };
 
-        var result = OAuth.CreateJWTToken(input);
+        var result = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         Assert.IsNotNull(result.Token);
 
         var parsedToken = ParseToken(result.Token, 1);
@@ -161,7 +168,7 @@ public class UnitTests
             CustomHeaders = new[] { new CustomHeader { Key = "kid", Value = "foobar" } }
         };
 
-        var result = OAuth.CreateJWTToken(input);
+        var result = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         Assert.IsNotNull(result.Token);
 
         var parsedToken = ParseToken(result.Token, 0);
@@ -184,7 +191,7 @@ public class UnitTests
             CustomHeaders = Array.Empty<CustomHeader>()
         };
 
-        var result = OAuth.CreateJWTToken(input);
+        var result = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         var parsedToken = ParseToken(result.Token, 0);
         Assert.AreEqual("ES256", parsedToken["alg"]);
         Assert.IsNotNull(result.Token);
@@ -209,7 +216,7 @@ public class UnitTests
             CustomHeaders = Array.Empty<CustomHeader>()
         };
 
-        var result = OAuth.CreateJWTToken(input);
+        var result = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         var parsedToken = ParseToken(result.Token, 0);
         Assert.AreEqual("ES384", parsedToken["alg"]);
         Assert.IsNotNull(result.Token);
@@ -234,7 +241,7 @@ public class UnitTests
             CustomHeaders = Array.Empty<CustomHeader>()
         };
 
-        var result = OAuth.CreateJWTToken(input);
+        var result = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         var parsedToken = ParseToken(result.Token, 0);
         Assert.AreEqual("ES512", parsedToken["alg"]);
         Assert.IsNotNull(result.Token);

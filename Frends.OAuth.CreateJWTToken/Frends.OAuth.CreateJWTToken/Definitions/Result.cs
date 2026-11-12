@@ -1,11 +1,11 @@
 ﻿namespace Frends.OAuth.CreateJWTToken.Definitions;
-/// <summary>
-/// Return token.
-/// </summary>
-public class TokenResult
-{
 
-    internal TokenResult(string token)
+/// <summary>
+/// Result.
+/// </summary>
+public class Result
+{
+    internal Result(string token)
     {
         Token = token;
     }
