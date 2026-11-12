@@ -2,8 +2,10 @@
 
 ## [2.0.0] - 2026-11-12
 ### Changed
-- **[Breaking Change]** Updated the task result and signature to the standard Frends task contract, including options and cancellation support.
+- Updated the task result with `Success` and `Error` parameters
+- Added `Options` tab to handle error handling with `ThrowErrorOnFailure` and `ErrorMessageOnFailure` properties.
 - Updated the task and tests to target .NET 8.
+- **[Breaking Change]** Task will now rethrow original exception instead of wrapping it in a new exception.
 
 ## [1.4.0] - 2025-11-18
 ### Fixes
