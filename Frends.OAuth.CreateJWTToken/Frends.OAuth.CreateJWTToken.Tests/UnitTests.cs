@@ -1,13 +1,15 @@
+using System.IdentityModel.Tokens.Jwt;
 using Frends.OAuth.CreateJWTToken.Definitions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Newtonsoft.Json.Linq;
-using System.IdentityModel.Tokens.Jwt;
 
 namespace Frends.OAuth.CreateJWTToken.Tests;
 
 [TestClass]
 public class UnitTests
 {
+    private const string X5T = "m5836ev678LlLGyFEdq+Ec71Inw=";
+
     private static readonly string KeysDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "../../../Keys");
 
     private static readonly string PrivateKey = File.ReadAllText(Path.Combine(KeysDirectory, "PK.pem"));
@@ -15,9 +17,7 @@ public class UnitTests
     private static readonly string Es256PrivateKey = File.ReadAllText(Path.Combine(KeysDirectory, "es256private.pem"));
     private static readonly string Es384PrivateKey = File.ReadAllText(Path.Combine(KeysDirectory, "es384private.pem"));
 
-    private const string X5T = "m5836ev678LlLGyFEdq+Ec71Inw=";
-
-    Input? input;
+    private Input? input;
 
     [TestMethod]
     public void KeysAreNotDisposed()
@@ -32,12 +32,32 @@ public class UnitTests
             PrivateKey = Es512PrivateKey,
             SigningAlgorithm = SigningAlgorithm.ES512,
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Jefim4ik" } },
-            CustomHeaders = Array.Empty<CustomHeader>()
+            CustomHeaders = Array.Empty<CustomHeader>(),
         };
-        var first = OAuth.CreateJWTToken(input);
+        var first = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         Assert.IsNotNull(first);
-        var second = OAuth.CreateJWTToken(input);
+        var second = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         Assert.IsNotNull(second);
+    }
+
+    [TestMethod]
+    public void CreateJwtTokenHonorsCancellation()
+    {
+        Assert.ThrowsException<OperationCanceledException>(() =>
+            OAuth.CreateJWTToken(new Input(), new Options(), new CancellationToken(true)));
+    }
+
+    [TestMethod]
+    public void CreateJwtTokenReturnsErrorWhenConfiguredNotToThrow()
+    {
+        var result = OAuth.CreateJWTToken(
+            new Input { PrivateKey = "invalid", SigningAlgorithm = SigningAlgorithm.RS256 },
+            new Options { ThrowErrorOnFailure = false, ErrorMessageOnFailure = "JWT token creation failed" },
+            CancellationToken.None);
+
+        Assert.IsFalse(result.Success);
+        Assert.IsTrue(result.Error.Message.StartsWith("JWT token creation failed:"));
+        Assert.IsNotNull(result.Error.AdditionalInfo);
     }
 
     /// <summary>
@@ -54,10 +74,11 @@ public class UnitTests
             PrivateKey = PrivateKey,
             SigningAlgorithm = SigningAlgorithm.HS256,
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Claimer" } },
-            CustomHeaders = Array.Empty<CustomHeader>()
+            CustomHeaders = Array.Empty<CustomHeader>(),
         };
 
-        var result = OAuth.CreateJWTToken(input);
+        var result = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
+        Assert.IsTrue(result.Success);
         Assert.IsNotNull(result.Token);
 
         // JWT tokens always have 2 dot separators between parts.
@@ -80,10 +101,10 @@ public class UnitTests
             PrivateKey = PrivateKey,
             SigningAlgorithm = SigningAlgorithm.RS256,
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Jefim4ik" } },
-            CustomHeaders = Array.Empty<CustomHeader>()
+            CustomHeaders = Array.Empty<CustomHeader>(),
         };
 
-        var result = OAuth.CreateJWTToken(input);
+        var result = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         Assert.IsNotNull(result.Token);
 
         // JWT tokens always have 2 dot separators between parts.
@@ -106,10 +127,10 @@ public class UnitTests
             PrivateKey = PrivateKey,
             SigningAlgorithm = SigningAlgorithm.RS256,
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Claimer" } },
-            CustomHeaders = Array.Empty<CustomHeader>()
+            CustomHeaders = Array.Empty<CustomHeader>(),
         };
 
-        var result = OAuth.CreateJWTToken(input);
+        var result = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         Assert.IsNotNull(result.Token);
 
         // JWT tokens always have 2 dot separators between parts.
@@ -132,10 +153,10 @@ public class UnitTests
             PrivateKey = PrivateKey,
             SigningAlgorithm = SigningAlgorithm.RS256,
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Claimer" } },
-            CustomHeaders = Array.Empty<CustomHeader>()
+            CustomHeaders = Array.Empty<CustomHeader>(),
         };
 
-        var result = OAuth.CreateJWTToken(input);
+        var result = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         Assert.IsNotNull(result.Token);
 
         var parsedToken = ParseToken(result.Token, 1);
@@ -158,10 +179,10 @@ public class UnitTests
             PrivateKey = PrivateKey,
             SigningAlgorithm = SigningAlgorithm.RS256,
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Claimer" } },
-            CustomHeaders = new[] { new CustomHeader { Key = "kid", Value = "foobar" } }
+            CustomHeaders = new[] { new CustomHeader { Key = "kid", Value = "foobar" } },
         };
 
-        var result = OAuth.CreateJWTToken(input);
+        var result = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         Assert.IsNotNull(result.Token);
 
         var parsedToken = ParseToken(result.Token, 0);
@@ -181,10 +202,10 @@ public class UnitTests
             PrivateKey = Es256PrivateKey,
             SigningAlgorithm = SigningAlgorithm.ES256,
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Jefim4ik" } },
-            CustomHeaders = Array.Empty<CustomHeader>()
+            CustomHeaders = Array.Empty<CustomHeader>(),
         };
 
-        var result = OAuth.CreateJWTToken(input);
+        var result = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         var parsedToken = ParseToken(result.Token, 0);
         Assert.AreEqual("ES256", parsedToken["alg"]);
         Assert.IsNotNull(result.Token);
@@ -206,10 +227,10 @@ public class UnitTests
             PrivateKey = Es384PrivateKey,
             SigningAlgorithm = SigningAlgorithm.ES384,
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Jefim4ik" } },
-            CustomHeaders = Array.Empty<CustomHeader>()
+            CustomHeaders = Array.Empty<CustomHeader>(),
         };
 
-        var result = OAuth.CreateJWTToken(input);
+        var result = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         var parsedToken = ParseToken(result.Token, 0);
         Assert.AreEqual("ES384", parsedToken["alg"]);
         Assert.IsNotNull(result.Token);
@@ -231,10 +252,10 @@ public class UnitTests
             PrivateKey = Es512PrivateKey,
             SigningAlgorithm = SigningAlgorithm.ES512,
             Claims = new[] { new JwtClaim { ClaimKey = "Name", ClaimValue = "Jefim4ik" } },
-            CustomHeaders = Array.Empty<CustomHeader>()
+            CustomHeaders = Array.Empty<CustomHeader>(),
         };
 
-        var result = OAuth.CreateJWTToken(input);
+        var result = OAuth.CreateJWTToken(input, new Options(), CancellationToken.None);
         var parsedToken = ParseToken(result.Token, 0);
         Assert.AreEqual("ES512", parsedToken["alg"]);
         Assert.IsNotNull(result.Token);
