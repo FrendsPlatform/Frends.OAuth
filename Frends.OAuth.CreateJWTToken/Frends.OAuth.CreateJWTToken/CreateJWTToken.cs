@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -6,6 +6,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
 using Frends.OAuth.CreateJWTToken.Definitions;
+using Frends.OAuth.CreateJWTToken.Helpers;
 using Microsoft.IdentityModel.Tokens;
 
 namespace Frends.OAuth.CreateJWTToken;
@@ -22,47 +23,58 @@ public static class OAuth
     /// <param name="input">Input parameters</param>
     /// <param name="options">Additional parameters</param>
     /// <param name="cancellationToken">A cancellation token provided by Frends Platform.</param>
-    /// <returns>object { string Token }</returns>
+    /// <returns>object { bool Success, string Token, object Error { string Message, Exception AdditionalInfo } }</returns>
     public static Result CreateJWTToken([PropertyTab] Input input, [PropertyTab] Options options, CancellationToken cancellationToken)
     {
-        cancellationToken.ThrowIfCancellationRequested();
-
-        SigningCredentials signingCredentials;
-        using var rsa = RSA.Create();
-        using var ecdsa = ECDsa.Create() ?? throw new InvalidOperationException("ECDsa.Create() returned null");
-
-        switch (input.SigningAlgorithm.ToString())
+        try
         {
-            case { } s when s.StartsWith("HS"): // symmetric
-                var securityKey = Encoding.UTF8.GetBytes(input.PrivateKey);
-                var symmetricSecurityKey = new SymmetricSecurityKey(securityKey);
-                signingCredentials = new SigningCredentials(symmetricSecurityKey, input.SigningAlgorithm.ToString());
-                break;
-            case { } s when s.StartsWith("RS"): // asymmetric
-                rsa.ImportFromPem(input.PrivateKey);
-                signingCredentials =
-                    new SigningCredentials(
-                        new RsaSecurityKey(rsa)
-                        {
-                            CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false },
-                        },
-                        input.SigningAlgorithm.ToString());
-                break;
-            case { } s when s.StartsWith("ES"): // asymmetric
-                ecdsa.ImportFromPem(input.PrivateKey);
-                signingCredentials =
-                    new SigningCredentials(
-                        new ECDsaSecurityKey(ecdsa)
-                        {
-                            CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false },
-                        },
-                        input.SigningAlgorithm.ToString());
-                break;
-            default:
-                throw new ArgumentException($"Signing algorithm {input.SigningAlgorithm} is not supported.");
-        }
+            cancellationToken.ThrowIfCancellationRequested();
 
-        return new Result(CreateToken(signingCredentials, input));
+            SigningCredentials signingCredentials;
+            using var rsa = RSA.Create();
+            using var ecdsa = ECDsa.Create() ?? throw new InvalidOperationException("ECDsa.Create() returned null");
+
+            switch (input.SigningAlgorithm.ToString())
+            {
+                case { } s when s.StartsWith("HS"): // symmetric
+                    var securityKey = Encoding.UTF8.GetBytes(input.PrivateKey);
+                    var symmetricSecurityKey = new SymmetricSecurityKey(securityKey);
+                    signingCredentials = new SigningCredentials(symmetricSecurityKey, input.SigningAlgorithm.ToString());
+                    break;
+                case { } s when s.StartsWith("RS"): // asymmetric
+                    rsa.ImportFromPem(input.PrivateKey);
+                    signingCredentials =
+                        new SigningCredentials(
+                            new RsaSecurityKey(rsa)
+                            {
+                                CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false },
+                            },
+                            input.SigningAlgorithm.ToString());
+                    break;
+                case { } s when s.StartsWith("ES"): // asymmetric
+                    ecdsa.ImportFromPem(input.PrivateKey);
+                    signingCredentials =
+                        new SigningCredentials(
+                            new ECDsaSecurityKey(ecdsa)
+                            {
+                                CryptoProviderFactory = new CryptoProviderFactory { CacheSignatureProviders = false },
+                            },
+                            input.SigningAlgorithm.ToString());
+                    break;
+                default:
+                    throw new ArgumentException($"Signing algorithm {input.SigningAlgorithm} is not supported.");
+            }
+
+            return new Result
+            {
+                Success = true,
+                Token = CreateToken(signingCredentials, input),
+            };
+        }
+        catch (Exception ex)
+        {
+            return ex.Handle(options);
+        }
     }
 
     private static string CreateToken(SigningCredentials signingCredentials, Input input)

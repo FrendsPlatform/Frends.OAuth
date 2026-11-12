@@ -1,9 +1,8 @@
 # Changelog
 
-## [1.5.0] - 2026-11-12
-### Added
-- Added standard task options and cancellation support.
-### Fixed
+## [2.0.0] - 2026-11-12
+### Changed
+- **[Breaking Change]** Updated the task result and signature to the standard Frends task contract, including options and cancellation support.
 - Updated the task and tests to target .NET 8.
 
 ## [1.4.0] - 2025-11-18

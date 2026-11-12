@@ -1,18 +1,25 @@
-﻿namespace Frends.OAuth.CreateJWTToken.Definitions;
+namespace Frends.OAuth.CreateJWTToken.Definitions;
 
 /// <summary>
 /// Result.
 /// </summary>
 public class Result
 {
-    internal Result(string token)
-    {
-        Token = token;
-    }
+    /// <summary>
+    /// Indicates if the task completed successfully.
+    /// </summary>
+    /// <example>true</example>
+    public bool Success { get; set; }
 
     /// <summary>
     /// Token.
     /// </summary>
-    /// <example>"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJOYW1lIjoiQ2xhaW1lciIsIm5iZiI6sTY1NjQ5OTk3NiwiZXhwIjoxNjU2NTAwMDMyLCJpYXQiOjE2NTY0OTk5NzYsImlzckI6ImZyZW5kcyIsImF1ZCI6ImF1ZCJ9.qImoi_fSi2BL4aoxIvvaGUVoM7usX40Mrdodh4yD8BY"</example>
-    public string Token { get; private set; }
+    /// <example>JWT token</example>
+    public string Token { get; set; }
+
+    /// <summary>
+    /// Error that occurred during task execution.
+    /// </summary>
+    /// <example>object { string Message, Exception AdditionalInfo }</example>
+    public Error Error { get; set; }
 }
