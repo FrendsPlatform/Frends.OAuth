@@ -2,8 +2,9 @@
 
 ## [2.0.0] - 2026-11-12
 ### Changed
-- **[Breaking Change]** Task results now use `Result` with success and error details; integrations explicitly referencing `ParseResult` must be updated.
-- Added options to return failures instead of throwing and to provide a custom error message.
+- ask results now use `Result` with success and error details.
+- Added options `ThrowErrorOnFailure` and `ErrorMessageOnFailure`  to return failures instead of throwing and to provide a custom error message.
+- **[Breaking Change]** Task now rethrows original exceptions or returns them in `Result` depends on new `Options` parameters
 
 ## [1.4.0] - 2026-11-02
 ### Added
