@@ -1,4 +1,4 @@
-﻿namespace Frends.OAuth.ParseToken.Definitions;
+namespace Frends.OAuth.ParseToken.Definitions;
 
 /// <summary>
 /// Configuration source.
@@ -13,5 +13,5 @@ public enum ConfigurationSource
     /// <summary>
     /// Static.
     /// </summary>
-    Static
+    Static,
 }

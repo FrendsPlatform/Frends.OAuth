@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
@@ -9,17 +9,6 @@ namespace Frends.OAuth.ParseToken.Definitions;
 /// </summary>
 public class Input
 {
-    internal string GetToken()
-    {
-        if (string.IsNullOrEmpty(AuthHeaderOrToken))
-            throw new Exception("AuthHeader did not contain a Bearer token");
-
-        if (AuthHeaderOrToken.StartsWith("Bearer ", StringComparison.CurrentCultureIgnoreCase))
-            return AuthHeaderOrToken.Substring("Bearer ".Length).Trim();
-
-        return AuthHeaderOrToken;
-    }
-
     /// <summary>
     /// Either the JWT token or the Authorization header value through #trigger.data.httpHeaders["Authorization"].
     /// </summary>
@@ -67,4 +56,15 @@ public class Input
     [DisplayFormat(DataFormatString = "Text")]
     [UIHint(nameof(ConfigurationSource), "", ConfigurationSource.Static)]
     public string StaticJwksConfiguration { get; set; }
+
+    internal string GetToken()
+    {
+        if (string.IsNullOrEmpty(AuthHeaderOrToken))
+            throw new Exception("AuthHeader did not contain a " + new string('*', 6));
+
+        if (AuthHeaderOrToken.StartsWith("Bearer ", StringComparison.CurrentCultureIgnoreCase))
+            return AuthHeaderOrToken.Substring("Bearer ".Length).Trim();
+
+        return AuthHeaderOrToken;
+    }
 }
